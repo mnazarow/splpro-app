@@ -12,6 +12,7 @@ import {
   ScrollView,
   Linking,
   Animated,
+  StatusBar as RNStatusBar,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
@@ -23,6 +24,9 @@ const BRAND_COLOR = '#2D2A26'; // фирменный графит SPL
 // Метка приложения в User-Agent — на стороне Bitrix можно определять
 // заход из приложения (например, php: strpos($_SERVER['HTTP_USER_AGENT'],'SPLPROApp'))
 const APP_UA_TAG = 'SPLPROApp/1.0';
+
+// Высота системной строки на Android (iOS обрабатывает SafeAreaView сам)
+const STATUSBAR_HEIGHT = Platform.OS === 'android' ? RNStatusBar.currentHeight || 24 : 0;
 
 // Схемы, которые должна открывать система, а не WebView
 const EXTERNAL_SCHEMES = ['tel:', 'mailto:', 'sms:', 'whatsapp:', 'tg:', 'viber:', 'intent:', 'geo:'];
@@ -103,8 +107,8 @@ export default function App() {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" backgroundColor={BRAND_COLOR} />
+    <SafeAreaView style={[styles.container, { paddingTop: STATUSBAR_HEIGHT }]}>
+      <StatusBar style="light" backgroundColor={BRAND_COLOR} translucent />
 
       {error ? (
         <ScrollView
@@ -180,8 +184,8 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
-  webview: { flex: 1 },
+  container: { flex: 1, backgroundColor: BRAND_COLOR },
+  webview: { flex: 1, backgroundColor: '#ffffff' },
   progressTrack: {
     position: 'absolute',
     top: 0,
@@ -209,6 +213,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 32,
+    backgroundColor: '#ffffff',
   },
   errorTitle: { fontSize: 22, fontWeight: '700', color: '#222', marginBottom: 12 },
   errorText: {
