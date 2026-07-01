@@ -18,7 +18,7 @@ import { StatusBar } from 'expo-status-bar';
 
 const SITE_URL = 'https://splpro.ru';
 const SITE_HOST = 'splpro.ru';
-const BRAND_COLOR = '#0a5ca8';
+const BRAND_COLOR = '#2D2A26'; // фирменный графит SPL
 
 // Метка приложения в User-Agent — на стороне Bitrix можно определять
 // заход из приложения (например, php: strpos($_SERVER['HTTP_USER_AGENT'],'SPLPROApp'))

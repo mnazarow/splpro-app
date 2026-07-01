@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#2D2A26"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -28,7 +28,7 @@
       "package": "ru.splpro.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#2D2A26"
       },
       "permissions": [
         "INTERNET",
