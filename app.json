@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "SPLPRO",
+    "slug": "splpro-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ru.splpro.app",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        },
+        "NSCameraUsageDescription": "Доступ к камере нужен для загрузки фото в формы на сайте.",
+        "NSPhotoLibraryUsageDescription": "Доступ к галерее нужен для загрузки файлов в формы на сайте.",
+        "NSMicrophoneUsageDescription": "Доступ к микрофону может потребоваться для форм на сайте."
+      }
+    },
+    "android": {
+      "package": "ru.splpro.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "INTERNET",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
