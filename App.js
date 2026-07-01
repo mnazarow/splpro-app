@@ -12,6 +12,7 @@ import {
   ScrollView,
   Linking,
   Animated,
+  Image,
   StatusBar as RNStatusBar,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -20,6 +21,13 @@ import { StatusBar } from 'expo-status-bar';
 const SITE_URL = 'https://splpro.ru';
 const SITE_HOST = 'splpro.ru';
 const BRAND_COLOR = '#2D2A26'; // фирменный графит SPL
+
+// Логотипы из бандла — показываются мгновенно, без обращения к сети
+const LOGO_MARK = require('./assets/adaptive-icon.png'); // белая марка для тёмной заставки
+const LOGO_ICON = require('./assets/icon.png'); // полный знак для светлого экрана ошибки
+
+// Максимум держим заставку, даже если сайт не ответил (мс)
+const SPLASH_MAX_MS = 12000;
 
 // Метка приложения в User-Agent — на стороне Bitrix можно определять
 // заход из приложения (например, php: strpos($_SERVER['HTTP_USER_AGENT'],'SPLPROApp'))
@@ -51,7 +59,24 @@ export default function App() {
   const [error, setError] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [splashVisible, setSplashVisible] = useState(true);
   const progress = useRef(new Animated.Value(0)).current;
+  const splashOpacity = useRef(new Animated.Value(1)).current;
+
+  // Плавно убрать брендовую заставку после первой загрузки
+  const hideSplash = useCallback(() => {
+    Animated.timing(splashOpacity, {
+      toValue: 0,
+      duration: 350,
+      useNativeDriver: true,
+    }).start(() => setSplashVisible(false));
+  }, [splashOpacity]);
+
+  // Страховка: не держать заставку вечно, если сайт не ответил
+  useEffect(() => {
+    const t = setTimeout(() => hideSplash(), SPLASH_MAX_MS);
+    return () => clearTimeout(t);
+  }, [hideSplash]);
 
   useEffect(() => {
     if (Platform.OS !== 'android') return;
@@ -85,8 +110,10 @@ export default function App() {
         duration: 120,
         useNativeDriver: false,
       }).start();
+      // Показать сайт раньше — не дожидаясь полной загрузки тяжёлого Bitrix
+      if (nativeEvent.progress >= 0.7) hideSplash();
     },
-    [progress]
+    [progress, hideSplash]
   );
 
   // Внешние схемы (звонок, почта, мессенджеры) отдаём системе.
@@ -115,6 +142,7 @@ export default function App() {
           contentContainerStyle={styles.errorContainer}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
+          <Image source={LOGO_ICON} style={styles.errorLogo} resizeMode="contain" />
           <Text style={styles.errorTitle}>Нет соединения</Text>
           <Text style={styles.errorText}>
             Не удалось загрузить splpro.ru. Проверьте подключение к интернету.
@@ -157,11 +185,15 @@ export default function App() {
           startInLoadingState
           onLoadProgress={onLoadProgress}
           onLoadStart={() => setLoading(true)}
-          onLoadEnd={() => setLoading(false)}
+          onLoadEnd={() => {
+            setLoading(false);
+            hideSplash();
+          }}
           onNavigationStateChange={(navState) => setCanGoBack(navState.canGoBack)}
           onError={() => {
             setError(true);
             setLoading(false);
+            hideSplash();
           }}
           onHttpError={() => setLoading(false)}
           renderError={() => null}
@@ -174,10 +206,15 @@ export default function App() {
         </View>
       )}
 
-      {loading && !error && (
-        <View style={styles.loader} pointerEvents="none">
-          <ActivityIndicator size="large" color={BRAND_COLOR} />
-        </View>
+      {splashVisible && (
+        <Animated.View
+          style={[styles.splash, { opacity: splashOpacity }]}
+          pointerEvents={loading ? 'auto' : 'none'}
+        >
+          <Image source={LOGO_MARK} style={styles.splashLogo} resizeMode="contain" />
+          <ActivityIndicator size="small" color="#ffffff" style={{ marginTop: 26 }} />
+          <Text style={styles.splashText}>Загрузка…</Text>
+        </Animated.View>
       )}
     </SafeAreaView>
   );
@@ -198,7 +235,7 @@ const styles = StyleSheet.create({
     height: 3,
     backgroundColor: BRAND_COLOR,
   },
-  loader: {
+  splash: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -206,7 +243,22 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.6)',
+    backgroundColor: BRAND_COLOR,
+  },
+  splashLogo: {
+    width: 180,
+    height: 180,
+  },
+  splashText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 14,
+    marginTop: 12,
+    letterSpacing: 1,
+  },
+  errorLogo: {
+    width: 96,
+    height: 96,
+    marginBottom: 24,
   },
   errorContainer: {
     flexGrow: 1,

@@ -1,0 +1,56 @@
+name: Build iOS (simulator, unsigned)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Expo prebuild (generate ios project)
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Build for iOS Simulator (no signing)
+        run: |
+          cd ios
+          WS=$(ls -d *.xcworkspace | head -1)
+          echo "Workspace: $WS"
+          SCHEME=$(xcodebuild -workspace "$WS" -list -json | python3 -c "import json,sys;print(json.load(sys.stdin)['workspace']['schemes'][0])")
+          echo "Scheme: $SCHEME"
+          xcodebuild \
+            -workspace "$WS" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package .app
+        run: |
+          APP=$(find ios/build/Build/Products/Release-iphonesimulator -maxdepth 1 -name "*.app" | head -1)
+          echo "App: $APP"
+          cd "$(dirname "$APP")"
+          zip -ry "$GITHUB_WORKSPACE/splpro-ios-simulator.zip" "$(basename "$APP")"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: splpro-ios-simulator
+          path: splpro-ios-simulator.zip

@@ -107,6 +107,36 @@ cd SplproApp && git init -b main && git add -A && git commit -m "SPLPRO app" && 
 
 ⚠️ **Важно:** сохраните папку `keystore/` в надёжном месте. Если потеряете этот ключ, вы не сможете выпускать обновления приложения в Google Play под тем же аккаунтом.
 
+### iOS-сборка на GitHub
+
+Отдельный workflow `.github/workflows/build-ios.yml` собирает приложение на macOS-раннере GitHub.
+
+**Бесплатно, без аккаунта Apple** — сборка для симулятора:
+```bash
+git push                                  # если ещё не запушено
+gh workflow run "Build iOS (simulator, unsigned)"
+gh run watch --exit-status
+gh run download -n splpro-ios-simulator
+```
+На выходе — `splpro-ios-simulator.zip` (файл `.app`). Запускается в **Xcode Simulator** на Mac:
+перетащите `.app` на окно симулятора или `xcrun simctl install booted SPLPRO.app`.
+⚠️ На реальный iPhone так поставить нельзя — симуляторные сборки не подписаны.
+
+**Для реального iPhone / App Store / TestFlight** нужен `.ipa`, а значит:
+1. Платный **Apple Developer** аккаунт ($99/год).
+2. Distribution-сертификат (`.p12`) и provisioning profile — добавляются в секреты репозитория,
+   сборка подписывается через `fastlane` на том же macOS-раннере.
+
+Проще всего управлять подписью через **EAS Build** (Expo сам создаёт и хранит сертификаты) —
+это можно запускать и вручную, и из GitHub Actions:
+```bash
+npm install -g eas-cli
+eas login
+eas build -p ios --profile production      # спросит данные Apple Developer, соберёт .ipa
+```
+EAS-профиль уже настроен в `eas.json`. Если нужен именно подписанный `.ipa` через GitHub Actions
+с fastlane — скажите, добавлю workflow и список нужных секретов.
+
 ### Вариант B — собрать APK/IPA в облаке (рекомендуется, Android Studio не нужен)
 
 Самый простой способ получить готовый `.apk` / `.aab` / `.ipa`:
