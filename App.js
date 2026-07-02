@@ -23,7 +23,7 @@ const SITE_HOST = 'splpro.ru';
 const BRAND_COLOR = '#2D2A26'; // фирменный графит SPL
 
 // Логотипы из бандла — показываются мгновенно, без обращения к сети
-const LOGO_MARK = require('./assets/adaptive-icon.png'); // белая марка для тёмной заставки
+const LOGO_MARK = require('./assets/logo-splash.png'); // логотип пользователя (как есть)
 const LOGO_ICON = require('./assets/icon.png'); // полный знак для светлого экрана ошибки
 
 // Максимум держим заставку, даже если сайт не ответил (мс)
@@ -212,7 +212,7 @@ export default function App() {
           pointerEvents={loading ? 'auto' : 'none'}
         >
           <Image source={LOGO_MARK} style={styles.splashLogo} resizeMode="contain" />
-          <ActivityIndicator size="small" color="#ffffff" style={{ marginTop: 26 }} />
+          <ActivityIndicator size="small" color={BRAND_COLOR} style={{ marginTop: 26 }} />
           <Text style={styles.splashText}>Загрузка…</Text>
         </Animated.View>
       )}
@@ -243,14 +243,14 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: BRAND_COLOR,
+    backgroundColor: '#ffffff',
   },
   splashLogo: {
-    width: 180,
-    height: 180,
+    width: 200,
+    height: 160,
   },
   splashText: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(45,42,38,0.6)',
     fontSize: 14,
     marginTop: 12,
     letterSpacing: 1,

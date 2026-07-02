@@ -14,5 +14,6 @@ ios/
 *.mobileprovision
 keystore/
 _gitcheck/
+assets/_preview.png
 splpro.apk
 splpro.aab
