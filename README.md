@@ -134,8 +134,16 @@ npm install -g eas-cli
 eas login
 eas build -p ios --profile production      # спросит данные Apple Developer, соберёт .ipa
 ```
-EAS-профиль уже настроен в `eas.json`. Если нужен именно подписанный `.ipa` через GitHub Actions
-с fastlane — скажите, добавлю workflow и список нужных секретов.
+EAS-профиль уже настроен в `eas.json`.
+
+**Подписанный `.ipa` через GitHub Actions + fastlane** — готовый workflow
+`.github/workflows/build-ios-signed.yml` и `fastlane/Fastfile`. Полная инструкция со списком
+всех секретов (`.p12`, provisioning profile, ключ App Store Connect API) — в файле
+[`IOS_SIGNING.md`](./IOS_SIGNING.md). Кратко:
+```bash
+gh workflow run "Build iOS (signed .ipa)"                            # собрать .ipa
+gh workflow run "Build iOS (signed .ipa)" -f upload_testflight=true  # + залить в TestFlight
+```
 
 ### Вариант B — собрать APK/IPA в облаке (рекомендуется, Android Studio не нужен)
 

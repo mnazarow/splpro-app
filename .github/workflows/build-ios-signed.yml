@@ -1,0 +1,81 @@
+name: Build iOS (signed .ipa)
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload_testflight:
+        description: "Загрузить сборку в TestFlight"
+        type: boolean
+        default: false
+      export_method:
+        description: "Метод экспорта"
+        type: choice
+        default: app-store
+        options:
+          - app-store
+          - ad-hoc
+          - development
+
+jobs:
+  build:
+    runs-on: macos-14
+    env:
+      IOS_BUNDLE_ID: ru.splpro.app
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+      IOS_PROVISIONING_PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+      EXPORT_METHOD: ${{ inputs.export_method }}
+      UPLOAD_TESTFLIGHT: ${{ inputs.upload_testflight }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Expo prebuild (generate ios project)
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Decode signing assets
+        env:
+          IOS_DIST_CERT_P12_BASE64: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          echo "$IOS_DIST_CERT_P12_BASE64" | base64 --decode > cert.p12
+          echo "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > profile.mobileprovision
+          # Установить профиль в оба возможных пути (зависит от версии Xcode)
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp profile.mobileprovision "$HOME/Library/MobileDevice/Provisioning Profiles/"
+          mkdir -p "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+          cp profile.mobileprovision "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles/" || true
+
+      - name: Resolve workspace & scheme
+        run: |
+          cd ios
+          WS=$(ls -d *.xcworkspace | head -1)
+          SCHEME=$(xcodebuild -workspace "$WS" -list -json | python3 -c "import json,sys;print(json.load(sys.stdin)['workspace']['schemes'][0])")
+          echo "XCWORKSPACE=$WS" >> "$GITHUB_ENV"
+          echo "SCHEME=$SCHEME" >> "$GITHUB_ENV"
+          echo "Workspace: $WS / Scheme: $SCHEME"
+
+      - name: Build & sign IPA (fastlane)
+        run: fastlane ios release
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: splpro-ios-ipa
+          path: ios/build/splpro.ipa
