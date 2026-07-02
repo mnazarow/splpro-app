@@ -42,26 +42,38 @@ const EXTERNAL_SCHEMES = ['tel:', 'mailto:', 'sms:', 'whatsapp:', 'tg:', 'viber:
 // Выполняется ДО загрузки страницы: помечаем html классом in-app,
 // чтобы шаблон Bitrix мог по желанию скрыть шапку/футер через CSS
 // (html.in-app .bx-header{display:none}) и ставим флаг для JS сайта.
+// CSS, скрывающий вход в личный кабинет во всех вариантах шапки и меню Bitrix
+const HIDE_CABINET_CSS =
+  '.header-cabinet, .header-cabinet__link, .mobilemenu__menu--cabinet,' +
+  ' a[href="/cabinet/"], a[href^="/cabinet"],' +
+  ' [data-name="auth"], [data-param-type="auth"],' +
+  ' [data-ajax-load-block="HEADER_TOGGLE_CABINET"],' +
+  ' [data-ajax-load-block="HEADER_FIXED_TOGGLE_CABINET"],' +
+  ' [data-ajax-load-block="HEADER_MOBILE_TOGGLE_PERSONAL"],' +
+  ' [data-ajax-load-block="HEADER_MOBILE_TOGGLE_CABINET"]' +
+  ' { display: none !important; }';
+
+// Ставит <style> с правилами скрытия (идемпотентно)
+const INJECT_HIDE_CABINET =
+  "(function(){try{var id='in-app-hide-cabinet';" +
+  "if(!document.getElementById(id)){var s=document.createElement('style');" +
+  "s.id=id;s.appendChild(document.createTextNode(" + JSON.stringify(HIDE_CABINET_CSS) + "));" +
+  "(document.head||document.documentElement).appendChild(s);}}catch(e){}})();";
+
 const INJECTED_BEFORE = `
   (function() {
     try {
       document.documentElement.classList.add('in-app');
       window.isMobileApp = true;
       window.localStorage && localStorage.setItem('is_mobile_app', '1');
-
-      // Скрыть вход в личный кабинет / авторизацию во всех вариантах шапки и меню
-      var css = '.header-cabinet, .mobilemenu__menu--cabinet,' +
-        ' a[href="/cabinet/"], a[href^="/cabinet"],' +
-        ' [data-name="auth"], [data-param-type="auth"]' +
-        ' { display: none !important; }';
-      var style = document.createElement('style');
-      style.setAttribute('data-in-app', 'hide-cabinet');
-      style.appendChild(document.createTextNode(css));
-      (document.head || document.documentElement).appendChild(style);
     } catch (e) {}
-    true;
   })();
+  ${INJECT_HIDE_CABINET}
+  true;
 `;
+
+// Повторная инъекция после полной загрузки (на случай ajax-догрузки шапки)
+const INJECTED_AFTER = INJECT_HIDE_CABINET + ' true;';
 
 export default function App() {
   const webViewRef = useRef(null);
@@ -183,6 +195,7 @@ export default function App() {
           mediaPlaybackRequiresUserAction={false}
           // --- Инъекции для интеграции с шаблоном ---
           injectedJavaScriptBeforeContentLoaded={INJECTED_BEFORE}
+          injectedJavaScript={INJECTED_AFTER}
           // --- Навигация ---
           onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
           setSupportMultipleWindows={false}
