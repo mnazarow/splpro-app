@@ -23,7 +23,7 @@ const SITE_HOST = 'splpro.ru';
 const BRAND_COLOR = '#2D2A26'; // фирменный графит SPL
 
 // Логотипы из бандла — показываются мгновенно, без обращения к сети
-const LOGO_MARK = require('./assets/logo-splash.png'); // логотип пользователя (как есть)
+const LOGO_MARK = require('./assets/logo-site.png'); // точный векторный логотип с сайта
 const LOGO_ICON = require('./assets/icon.png'); // полный знак для светлого экрана ошибки
 
 // Максимум держим заставку, даже если сайт не ответил (мс)
@@ -48,6 +48,16 @@ const INJECTED_BEFORE = `
       document.documentElement.classList.add('in-app');
       window.isMobileApp = true;
       window.localStorage && localStorage.setItem('is_mobile_app', '1');
+
+      // Скрыть вход в личный кабинет / авторизацию во всех вариантах шапки и меню
+      var css = '.header-cabinet, .mobilemenu__menu--cabinet,' +
+        ' a[href="/cabinet/"], a[href^="/cabinet"],' +
+        ' [data-name="auth"], [data-param-type="auth"]' +
+        ' { display: none !important; }';
+      var style = document.createElement('style');
+      style.setAttribute('data-in-app', 'hide-cabinet');
+      style.appendChild(document.createTextNode(css));
+      (document.head || document.documentElement).appendChild(style);
     } catch (e) {}
     true;
   })();
@@ -247,7 +257,7 @@ const styles = StyleSheet.create({
   },
   splashLogo: {
     width: 200,
-    height: 160,
+    height: 200,
   },
   splashText: {
     color: 'rgba(45,42,38,0.6)',
