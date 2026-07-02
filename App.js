@@ -19,12 +19,10 @@ import { WebView } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
 
 const SITE_URL = 'https://splpro.ru';
-const SITE_HOST = 'splpro.ru';
 const BRAND_COLOR = '#2D2A26'; // фирменный графит SPL
 
-// Логотипы из бандла — показываются мгновенно, без обращения к сети
-const LOGO_MARK = require('./assets/logo-site.png'); // точный векторный логотип с сайта
-const LOGO_ICON = require('./assets/icon.png'); // полный знак для светлого экрана ошибки
+// Точный векторный логотип с сайта (из бандла — показывается мгновенно, без сети)
+const LOGO_MARK = require('./assets/logo-site.png');
 
 // Максимум держим заставку, даже если сайт не ответил (мс)
 const SPLASH_MAX_MS = 12000;
@@ -39,9 +37,6 @@ const STATUSBAR_HEIGHT = Platform.OS === 'android' ? RNStatusBar.currentHeight |
 // Схемы, которые должна открывать система, а не WebView
 const EXTERNAL_SCHEMES = ['tel:', 'mailto:', 'sms:', 'whatsapp:', 'tg:', 'viber:', 'intent:', 'geo:'];
 
-// Выполняется ДО загрузки страницы: помечаем html классом in-app,
-// чтобы шаблон Bitrix мог по желанию скрыть шапку/футер через CSS
-// (html.in-app .bx-header{display:none}) и ставим флаг для JS сайта.
 // CSS, скрывающий вход в личный кабинет во всех вариантах шапки и меню Bitrix
 const HIDE_CABINET_CSS =
   '.header-cabinet, .header-cabinet__link, .mobilemenu__menu--cabinet,' +
@@ -164,7 +159,7 @@ export default function App() {
           contentContainerStyle={styles.errorContainer}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
-          <Image source={LOGO_ICON} style={styles.errorLogo} resizeMode="contain" />
+          <Image source={LOGO_MARK} style={styles.errorLogo} resizeMode="contain" />
           <Text style={styles.errorTitle}>Нет соединения</Text>
           <Text style={styles.errorText}>
             Не удалось загрузить splpro.ru. Проверьте подключение к интернету.
